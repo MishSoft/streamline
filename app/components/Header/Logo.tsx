@@ -4,7 +4,7 @@ import React from 'react'
 export default function Logo() {
   return (
     <Link href='/'>
-      <h1 className='text-2xl text-white font-semibold'>StreamLine</h1>
+      <h1 className='text-xl md:text-2xl text-white font-semibold'>StreamLine</h1>
     </Link>
   )
 }

@@ -27,12 +27,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Header />
 
         <div className="flex ">
-          <aside className="w-60 hidden md:block">
+          <aside className="w-20 xl:w-60 hidden md:block">
             <SideBar />
           </aside>
 

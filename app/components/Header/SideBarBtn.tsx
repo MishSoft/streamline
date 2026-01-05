@@ -4,7 +4,7 @@ import { RiMenu2Fill } from "react-icons/ri";
 export default function SideBarBtn() {
   return (
     <button className='text-white cursor-pointer border-none outline-none'>
-      <RiMenu2Fill size={25}/>
+      <RiMenu2Fill className='text-2xl' />
     </button>
   )
 }

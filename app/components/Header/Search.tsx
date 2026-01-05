@@ -6,8 +6,8 @@ import { IoSearchOutline } from "react-icons/io5";
 export default function Search() {
   const [isActive, setIsActive] = useState<boolean>(false)
   return (
-    <div className='flex items-center justify-between max-w-xl w-xl bg-gray-950 border border-gray-800 rounded-full'>
-      <div className='flex items-center'>
+    <div className='sm:flex items-center justify-between xl:max-w-xl  hidden xl:w-xl md:w-md  bg-gray-950 border border-gray-800 rounded-full'>
+      <div className='flex items-center '>
         {isActive && <span className='pl-5'><IoSearchOutline size={20} className='text-white ' /></span>}
         <input
          onFocus={() => setIsActive(true)}

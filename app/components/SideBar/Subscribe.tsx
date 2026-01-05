@@ -4,7 +4,7 @@ import { FaRegCircleUser } from "react-icons/fa6";
 
 export default function Subscribe() {
   return (
-    <div className='p-5 flex flex-col items-start border-b border-white/30 gap-2'>
+    <div className='p-5 xl:flex flex-col items-start hidden border-b border-white/30 gap-2'>
       <h2 className='text-white text-left'>
         Sign in to like videos,
         comment, and subscribe
