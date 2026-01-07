@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect } from 'react'
-import useYoutubeStore from "@/store/useYoutubeStore"
+import {useYoutubeStore} from "@/store/useYoutubeStore"
 
 export default function LiveVideoCard() {
   const { liveVideos, fetchLiveVideos } = useYoutubeStore();

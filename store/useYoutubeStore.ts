@@ -2,75 +2,96 @@ import { create } from "zustand"
 
 interface YoutubeState {
   videos: any[];
-  liveVideos: any[]; // დარწმუნდი, რომ აქ ? არ წერია
+  liveVideos: any[];
+  shortVideos: any[];
+  nextPageToken: string | null;
   loading: boolean;
-  fetchVideos: (query: string) => Promise<void>;
-  fetchLiveVideos: () => Promise<void>; // აქაც ? არ გინდა
+  fetchVideos: (query: string, isNextPage?: boolean) => Promise<void>;
+  fetchLiveVideos: () => Promise<void>;
+  fetchShortVideos: () => Promise<void>;
 }
 
-const useYoutubeStore = create<YoutubeState>((set) => ({
+export const useYoutubeStore = create<YoutubeState>((set, get) => ({
   videos: [],
   liveVideos: [],
+  shortVideos: [],
+  nextPageToken: null,
   loading: false,
 
-  fetchVideos: async (query: string) => {
-    console.log("1. ფუნქცია გაეშვა, query:", query);
+  fetchVideos: async (query: string, isNextPage = false) => {
+    // თუ უკვე იტვირთება, ახალ მოთხოვნას არ ვუშვებთ (კვოტის დასაზოგად)
+    if (get().loading) return;
+
     set({ loading: true });
 
     try {
+      // ⚠️ დარწმუნდი, რომ .env-ში სახელი ზუსტად ასე გიწერია
       const apiKey = process.env.NEXT_PUBLIC_KEY;
-      if (!apiKey) {
-        console.error("2. შეცდომა: API Key ვერ მოიძებნა!");
-        set({ loading: false });
-        return;
-      }
+      const currentToken = isNextPage ? get().nextPageToken : null;
 
-      console.log("3. ვაგზავნით პირველ მოთხოვნას (Search)...");
-      const searchRes = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&key=${apiKey}&type=video&maxResults=12`
-      );
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&key=${apiKey}&type=video&maxResults=12${currentToken ? `&pageToken=${currentToken}` : ''}`;
+
+      const searchRes = await fetch(searchUrl);
       const searchData = await searchRes.json();
 
       if (searchData.error) {
-        console.error("4. API შეცდომა:", searchData.error.message);
+        console.error("API Error:", searchData.error.message);
         set({ loading: false });
         return;
       }
 
-      console.log("5. ძებნა დასრულდა, მოვიდა:", searchData.items?.length, "ვიდეო");
-
       const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
 
-      console.log("6. ვაგზავნით მეორე მოთხოვნას (Stats)...");
       const statsRes = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${videoIds}&key=${apiKey}`
       );
       const statsData = await statsRes.json();
 
-      console.log("7. ფინალური მონაცემები მზად არის:", statsData.items?.length);
-      set({ videos: statsData.items || [], loading: false });
+      set({
+        // თუ შემდეგი გვერდია, ახალ ვიდეოებს ვამატებთ ძველების ბოლოში
+        videos: isNextPage ? [...get().videos, ...statsData.items] : statsData.items,
+        nextPageToken: searchData.nextPageToken || null,
+        loading: false,
+      });
 
     } catch (error) {
-      console.error("X. კრიტიკული შეცდომა:", error);
+      console.error("Critical Error:", error);
       set({ loading: false });
     }
   },
 
   fetchLiveVideos: async () => {
-  set({ loading: true });
-  try {
-    const apiKey = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&eventType=live&maxResults=5&key=${apiKey}`
-    );
-    const data = await res.json();
-    // შეგიძლია შექმნა ახალი სთეითი liveVideos: [] ან გამოიყენო არსებული
-    set({ liveVideos: data.items || [], loading: false });
-  } catch (error) {
-    console.error("Error fetching live videos:", error);
-    set({ loading: false });
-  }
-}
-}))
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_KEY;
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&eventType=live&q=live&maxResults=5&key=${apiKey}`
+      );
+      const data = await res.json();
+      set({ liveVideos: data.items || [] });
+    } catch (error) {
+      console.error("Live fetch error:", error);
+    }
+  },
 
-export default useYoutubeStore;
+  fetchShortVideos: async () => {
+    set({ loading: true }); // დავიწყოთ ჩატვირთვა
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_KEY;
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&q=shorts&maxResults=10&key=${apiKey}`
+      );
+      const data = await res.json();
+
+      if (data.error) {
+        console.error("API Error:", data.error.message);
+        set({ loading: false });
+        return;
+      }
+
+      set({ shortVideos: data.items || [], loading: false });
+    } catch (error) {
+      console.error("Shorts fetch error:", error);
+      set({ loading: false });
+    }
+  }
+}))

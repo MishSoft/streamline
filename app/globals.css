@@ -4,3 +4,16 @@
 body {
   background-color: black;
 }
+
+@layer utilities {
+  /* სქროლბარის დამალვა Chrome, Safari და Opera-სთვის */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* სქროლბარის დამალვა IE, Edge და Firefox-ისთვის */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+}
